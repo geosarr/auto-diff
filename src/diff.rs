@@ -1,22 +1,17 @@
-use crate::{Const, One, Operation, Var, Zero};
+use crate::{One, Operation, Variable, Zero};
 
-impl<V, T: Zero> Operation<V, T> for Const<T> {
-    fn backward(&self, _: &V) -> T {
-        T::zero()
-    }
-}
-
-impl<'a, C, T: Zero + One + PartialEq> Operation<Const<C>, T> for Var<'a, T> {
-    fn backward(&self, _: &Const<C>) -> T {
-        T::zero()
-    }
-}
-impl<'a, 'b, T: Zero + One + PartialEq> Operation<Var<'b, T>, T> for Var<'a, T> {
-    fn backward(&self, variable: &Var<'b, T>) -> T {
-        if self == variable {
-            T::one()
+impl<'a, T: Zero + One + PartialEq> Operation<Variable<'a, T>, T> for Variable<'a, T> {
+    fn backward(&self, obj: &Variable<'a, T>) -> T {
+        if let Variable::Const(_) = self {
+            // Derivative of a constant wrt any object is zero.
+            return T::zero();
         } else {
-            T::zero()
+            // Derivative of a variable wrt to itself is one, otherwise 0.
+            if obj == self {
+                T::one()
+            } else {
+                T::zero()
+            }
         }
     }
 }

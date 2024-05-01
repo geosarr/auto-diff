@@ -1,34 +1,4 @@
 use std::ops;
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Const<T> {
-    value: T,
-}
-impl<T> Const<T> {
-    pub fn init(value: T) -> Self {
-        Self { value }
-    }
-    pub fn value(&self) -> &T {
-        &self.value
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Var<'a, T> {
-    name: &'a str,
-    value: T,
-}
-
-impl<'a, T> Var<'a, T> {
-    pub fn init(name: &'a str, value: T) -> Self {
-        Self { name, value }
-    }
-    pub fn name(&self) -> &'a str {
-        self.name
-    }
-    pub fn value(&self) -> &T {
-        &self.value
-    }
-}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Variable<'a, T> {
@@ -79,14 +49,6 @@ impl<X, Y> Operator<X, Y> {
 
 macro_rules! node_op_ty {
     ($($path:ident)::+, $fn:ident, $ty:ty) => {
-        // Const impls
-        impl $($path)::+<Const<$ty>> for Const<$ty> {
-            type Output = Const<$ty>;
-            fn $fn(self, other: Const<$ty>) -> Self::Output {
-                Const::init(self.value().$fn(other.value()))
-            }
-        }
-        // test
         impl<'a> $($path)::+<Variable<'a, $ty>> for Variable<'a, $ty> {
             type Output = Variable<'a, $ty>;
             fn $fn(self, other: Variable<'a, $ty>) -> Self::Output {
@@ -143,38 +105,6 @@ macro_rules! node_op_ty {
                         return Variable::Var(name, self.$fn(value));
                     }
                 }
-            }
-        }
-        impl $($path)::+<$ty> for Const<$ty> {
-            type Output = Const<$ty>;
-            fn $fn(self, other: $ty) -> Self::Output {
-                Const::init(self.value().$fn(other))
-            }
-        }
-        impl $($path)::+<Const<$ty>> for $ty {
-            type Output = Const<$ty>;
-            fn $fn(self, other: Const<$ty>) -> Self::Output {
-                Const::init(self.$fn(other.value()))
-            }
-        }
-
-        // Var impls
-        impl<'a> $($path)::+<Var<'a, $ty>> for Var<'a, $ty> {
-            type Output = Var<'a, $ty>;
-            fn $fn(self, other: Var<'a, $ty>) -> Self::Output {
-                Var::init(self.name() , self.value().$fn(other.value()))
-            }
-        }
-        impl<'a> $($path)::+<$ty> for Var<'a, $ty> {
-            type Output = Var<'a, $ty>;
-            fn $fn(self, other: $ty) -> Self::Output {
-                Var::init(self.name(), self.value().$fn(other))
-            }
-        }
-        impl<'a> $($path)::+<Var<'a, $ty>> for $ty {
-            type Output = Var<'a, $ty>;
-            fn $fn(self, other: Var<'a, $ty>) -> Self::Output {
-                Var::init(other.name(), self.$fn(other.value()))
             }
         }
     };
